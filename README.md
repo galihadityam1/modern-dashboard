@@ -1,4 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Modern Dashboard Application
+
+![Analytics Overview](./public/images/analytics.png)
+![Light Mode Dashboard](./public/images/light_mode_dashboad.png)
+![Dark Mode Dashboard](./public/images/dark_mode_dashboard.png)
+![Drag and Drop Section](./public/images/drag_and_drop_section.png)
+
+## Problem Statement
+
+Managing and tracking the progress of complex documents and team workflows is often time-consuming and error-prone. Organizations need a way to:
+- Monitor document section progress and reviewer workload
+- Quickly identify bottlenecks and overdue sections
+- Visualize key analytics (status, types, reviewer distribution)
+- Adapt to both light and dark mode for modern work environments
+
+## Solution: Modern Dashboard
+
+This application provides a comprehensive dashboard for document lifecycle management, analytics, and team collaboration, built with Next.js, Supabase, and modern UI libraries.
+
+### Key Features
+
+- **Analytics Overview**: Visualize section status, reviewer workload, and section type distribution with interactive charts.
+- **Live Data Table**: Track all document sections, their status, targets, limits, and assigned reviewers. Supports drag-and-drop, pagination, and inline editing.
+- **Past Performance**: Instantly see completed sections in a dedicated, paginated view.
+- **Theme Support**: Seamless switch between light and dark modes for optimal readability.
+- **Customizable Columns**: Choose which data columns to display for a personalized experience.
+- **Quick Create & Navigation**: Fast access to key actions and pages from the sidebar.
+- **Responsive Design**: Works beautifully on both desktop and mobile devices.
+
+### How It Works
+
+- Data is fetched and updated live from Supabase, ensuring real-time accuracy across all users.
+- Analytics and charts are generated from actual document and reviewer data for actionable insights.
+- The UI is built with accessibility and modern UX best practices in mind.
 
 ## Getting Started
 
@@ -20,17 +53,6 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For more details, see the screenshots above and explore the codebase!

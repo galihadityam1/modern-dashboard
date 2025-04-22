@@ -3,6 +3,7 @@ import React from "react"
 import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tooltip as RechartsTooltip } from 'recharts';
 import data from "../dashboard/data.json"
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"]
@@ -91,9 +92,23 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={reviewerData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+                {/* <XAxis dataKey="name" /> */}
                 <YAxis allowDecimals={false} />
-                <Tooltip />
+                <RechartsTooltip
+                  cursor={{ fill: '#eee' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const { name, value } = payload[0].payload;
+                      return (
+                        <div className="rounded bg-background p-2 shadow border text-sm">
+                          <div><span className="font-medium">Reviewer:</span> {name}</div>
+                          <div><span className="font-medium">Sections:</span> {value}</div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
                 <Legend />
                 <Bar dataKey="value" fill="#8884d8" />
               </BarChart>
@@ -147,7 +162,7 @@ export default function AnalyticsPage() {
             </Table>
             <div className="flex justify-between items-center mt-4">
               <button
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                className="px-3 py-1 rounded transition-colors bg-muted text-foreground hover:bg-accent disabled:opacity-50"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
@@ -157,7 +172,7 @@ export default function AnalyticsPage() {
                 Page {page} of {pageCount}
               </span>
               <button
-                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                className="px-3 py-1 rounded transition-colors bg-muted text-foreground hover:bg-accent disabled:opacity-50"
                 onClick={() => setPage(p => Math.min(pageCount, p + 1))}
                 disabled={page === pageCount}
               >

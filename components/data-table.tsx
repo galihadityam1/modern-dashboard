@@ -106,6 +106,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 
+import { supabase } from "@/utils/supabase/client"
+
 export const schema = z.object({
   id: z.number(),
   header: z.string(),
@@ -372,6 +374,45 @@ export function DataTable({ data: propData, loading }: DataTableProps) {
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
+  const [view, setView] = React.useState("outline");
+  const [pastPerformanceRows, setPastPerformanceRows] = React.useState<{ header: string, status: string, reviewer: string }[]>([]);
+  const PAST_PERFORMANCE_PAGE_SIZES = [10, 20, 30, 40, 50];
+  const [pastPerformancePage, setPastPerformancePage] = React.useState(0);
+  const [pastPerformancePageSize, setPastPerformancePageSize] = React.useState(PAST_PERFORMANCE_PAGE_SIZES[0]);
+  const pastPerformancePageCount = Math.ceil(pastPerformanceRows.length / pastPerformancePageSize);
+  const pagedPastPerformanceRows = pastPerformanceRows.slice(
+    pastPerformancePage * pastPerformancePageSize,
+    (pastPerformancePage + 1) * pastPerformancePageSize
+  );
+  const borderStyle =
+  pagedPastPerformanceRows.length === 0
+    ? "border-destructive/70 bg-destructive/5"
+    : pagedPastPerformanceRows.length < 5
+      ? "border-warning/70 bg-warning/10"
+      : "border-primary/70 hover:border-primary-foreground/90 focus-within:border-accent";
+
+
+  React.useEffect(() => {
+    if (view === "past-performance") {
+      setPastPerformancePage(0); // Reset to first page on tab switch
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("sections")
+            .select("header, status, reviewer")
+            .eq("status", "Done");
+
+          if (error) throw error;
+
+          setPastPerformanceRows(data ?? []);
+        } catch (err) {
+          console.error("Failed to fetch sections:", err);
+          setPastPerformanceRows([]);
+        }
+      })();
+    }
+  }, [view]);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (active && over && active.id !== over.id) {
@@ -385,14 +426,16 @@ export function DataTable({ data: propData, loading }: DataTableProps) {
 
   return (
     <Tabs
-      defaultValue="outline"
+      defaultValue={view}
+      value={view}
+      onValueChange={setView}
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
-        <Select defaultValue="outline">
+        <Select value={view} onValueChange={setView} defaultValue="outline">
           <SelectTrigger
             className="flex w-fit @4xl/main:hidden"
             size="sm"
@@ -402,7 +445,9 @@ export function DataTable({ data: propData, loading }: DataTableProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
+            <SelectItem value="past-performance">
+              Past Performance
+            </SelectItem>
             <SelectItem value="key-personnel">Key Personnel</SelectItem>
             <SelectItem value="focus-documents">Focus Documents</SelectItem>
           </SelectContent>
@@ -479,9 +524,9 @@ export function DataTable({ data: propData, loading }: DataTableProps) {
                           {header.isPlaceholder
                             ? null
                             : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                         </TableHead>
                       )
                     })}
@@ -590,11 +635,117 @@ export function DataTable({ data: propData, loading }: DataTableProps) {
           </div>
         </div>
       </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+      <TabsContent value="past-performance" className="flex flex-col px-4 lg:px-6">
+        <div
+          className={
+            [
+              "w-full flex-1 rounded-2xl border bg-background shadow-sm flex flex-col justify-start items-stretch p-4 overflow-x-auto transition-colors duration-300",
+              pagedPastPerformanceRows.length === 0
+                ? "border-destructive/70 bg-destructive/5"
+                : "border-primary/70 hover:border-primary-foreground/90 focus-within:border-accent"
+            ].join(" ")
+          }
+        >
+          <h2 className="text-lg font-semibold mb-4">Past Performance (status: Done)</h2>
+          <div className="w-full">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="border-b border-muted-foreground/20">
+                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Header</th>
+                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Reviewer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedPastPerformanceRows.length > 0 ? (
+                  pagedPastPerformanceRows.map((row, i) => (
+                    <tr key={row.header + row.status + row.reviewer + i} className="border-b last:border-none hover:bg-accent/10">
+                      <td className="px-4 py-2 whitespace-nowrap">{row.header}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{row.reviewer}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="italic text-muted-foreground px-4 py-6 text-center">No completed sections</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+            <div className="flex items-center justify-between px-4 mt-4">
+              <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
+                Showing {pagedPastPerformanceRows.length} of {pastPerformanceRows.length} result(s).
+              </div>
+              <div className="flex w-full items-center gap-8 lg:w-fit">
+                <div className="hidden items-center gap-2 lg:flex">
+                  <Label htmlFor="past-performance-rows-per-page" className="text-sm font-medium">
+                    Rows per page
+                  </Label>
+                  <Select
+                    value={`${pastPerformancePageSize}`}
+                    onValueChange={(value) => {
+                      setPastPerformancePageSize(Number(value));
+                      setPastPerformancePage(0);
+                    }}
+                  >
+                    <SelectTrigger size="sm" className="w-20" id="past-performance-rows-per-page">
+                      <SelectValue placeholder={pastPerformancePageSize} />
+                    </SelectTrigger>
+                    <SelectContent side="top">
+                      {PAST_PERFORMANCE_PAGE_SIZES.map((pageSize) => (
+                        <SelectItem key={pageSize} value={`${pageSize}`}>
+                          {pageSize}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex w-fit items-center justify-center text-sm font-medium">
+                  Page {pastPerformancePage + 1} of {pastPerformancePageCount || 1}
+                </div>
+                <div className="ml-auto flex items-center gap-2 lg:ml-0">
+                  <Button
+                    variant="outline"
+                    className="hidden h-8 w-8 p-0 lg:flex"
+                    onClick={() => setPastPerformancePage(0)}
+                    disabled={pastPerformancePage === 0}
+                  >
+                    <span className="sr-only">Go to first page</span>
+                    <IconChevronsLeft />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="size-8"
+                    size="icon"
+                    onClick={() => setPastPerformancePage((p) => Math.max(0, p - 1))}
+                    disabled={pastPerformancePage === 0}
+                  >
+                    <span className="sr-only">Go to previous page</span>
+                    <IconChevronLeft />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="size-8"
+                    size="icon"
+                    onClick={() => setPastPerformancePage((p) => Math.min(pastPerformancePageCount - 1, p + 1))}
+                    disabled={pastPerformancePage + 1 >= pastPerformancePageCount}
+                  >
+                    <span className="sr-only">Go to next page</span>
+                    <IconChevronRight />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="hidden size-8 lg:flex"
+                    size="icon"
+                    onClick={() => setPastPerformancePage(pastPerformancePageCount - 1)}
+                    disabled={pastPerformancePage + 1 >= pastPerformancePageCount}
+                  >
+                    <span className="sr-only">Go to last page</span>
+                    <IconChevronsRight />
+                  </Button>
+                </div>
+              </div>
+            </div>
       </TabsContent>
       <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
